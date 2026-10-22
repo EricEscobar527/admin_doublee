@@ -1,0 +1,89 @@
+{
+  "info": {
+    "name": "DoubleE Admin - Soporte",
+    "description": "Pruebas de POST {{baseUrl}}/support/tickets. Antes de usarla, pon en la variable `token` el token de la app (Panel > Aplicaciones > editar).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8010/api" },
+    { "key": "token", "value": "PEGA_AQUI_EL_TOKEN_DE_LA_APP" }
+  ],
+  "item": [
+    {
+      "name": "1. Ticket completo con imagen (201)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/support/tickets",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "issue", "value": "app_error", "type": "text" },
+            { "key": "email", "value": "conductor@example.com", "type": "text" },
+            { "key": "name", "value": "Juan Pérez", "type": "text" },
+            { "key": "phone", "value": "5512345678", "type": "text" },
+            { "key": "message", "value": "La app se cierra al abrir el mapa del viaje.", "type": "text" },
+            { "key": "device_time", "value": "2026-10-22T13:05:09-06:00", "type": "text" },
+            { "key": "app_version", "value": "1.0.0", "type": "text" },
+            { "key": "app_build", "value": "1", "type": "text" },
+            { "key": "android_version", "value": "16", "type": "text" },
+            { "key": "android_sdk", "value": "36", "type": "text" },
+            { "key": "device_manufacturer", "value": "realme", "type": "text" },
+            { "key": "device_brand", "value": "realme", "type": "text" },
+            { "key": "device_model", "value": "RMX5101", "type": "text" },
+            { "key": "images", "type": "file", "src": "C:/MAMP/htdocs/admin_doublee/docs/captura-prueba.png" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Ticket mínimo sin imágenes (201)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/support/tickets",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "issue", "value": "other", "type": "text" },
+            { "key": "email", "value": "cliente@example.com", "type": "text" },
+            { "key": "message", "value": "Tengo una duda sobre mi cuenta.", "type": "text" },
+            { "key": "device_time", "value": "2026-10-22T13:05:09-06:00", "type": "text" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Error de validación (400)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/support/tickets",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "issue", "value": "no_existe", "type": "text" },
+            { "key": "email", "value": "no-es-correo", "type": "text" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Sin token (401)",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "POST",
+        "url": "{{baseUrl}}/support/tickets",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "issue", "value": "other", "type": "text" },
+            { "key": "email", "value": "cliente@example.com", "type": "text" },
+            { "key": "message", "value": "Sin token", "type": "text" }
+          ]
+        }
+      }
+    }
+  ]
+}

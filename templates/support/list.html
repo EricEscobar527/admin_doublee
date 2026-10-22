@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Soporte{% endblock %}
+{% block heading %}Tickets de soporte{% endblock %}
+{% block content %}
+<form class="card card-body mb-3 filters" method="get">
+  <div class="row g-2">
+    <div class="col-12 col-md-4">
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar por folio, correo, mensaje o modelo">
+    </div>
+    <div class="col-12 col-md-2">
+      <select class="form-select" name="app">
+        <option value="">Todas las apps</option>
+        {% for application in applications %}<option value="{{ application.pk }}" {% if application.pk|stringformat:"d" == app %}selected{% endif %}>{{ application.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <select class="form-select" name="issue">
+        <option value="">Todos los tipos</option>
+        {% for value, label in issues %}<option value="{{ value }}" {% if value == issue %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <select class="form-select" name="status">
+        <option value="">Todos</option>
+        {% for value, label in statuses %}<option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-2 d-grid"><button class="btn btn-primary"><i class="bi bi-search"></i> Filtrar</button></div>
+  </div>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Folio</th><th>App</th><th>Tipo</th><th>Correo</th><th class="d-none d-lg-table-cell">Dispositivo</th>
+          <th class="d-none d-md-table-cell">App</th><th class="text-center"><i class="bi bi-image"></i></th>
+          <th>Estatus</th><th class="d-none d-md-table-cell">Recibido</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in page %}
+          <tr class="row-link" onclick="location.href='{% url 'support:detail' ticket.pk %}'">
+            <td class="mono"><a href="{% url 'support:detail' ticket.pk %}">{{ ticket.folio }}</a></td>
+            <td>{% include "applications/_badge.html" with application=ticket.application %}</td>
+            <td>{{ ticket.get_issue_display }}</td>
+            <td class="text-truncate" style="max-width:220px">{{ ticket.email }}</td>
+            <td class="d-none d-lg-table-cell">{{ ticket.device_brand|default:"—" }} {{ ticket.device_model }}</td>
+            <td class="d-none d-md-table-cell">{{ ticket.app_version|default:"—" }}{% if ticket.app_build %} ({{ ticket.app_build }}){% endif %}</td>
+            <td class="text-center">{{ ticket.image_count|default:"" }}</td>
+            <td>{% include "support/_status_badge.html" %}</td>
+            <td class="d-none d-md-table-cell text-muted small">{{ ticket.created_at|date:"d/m/Y H:i" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="9"class="text-center text-muted py-4">No hay tickets con estos filtros.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if page.paginator.num_pages > 1 %}
+<nav class="mt-3 d-flex align-items-center gap-3">
+  <span class="text-muted small">{{ page.paginator.count }} tickets · página {{ page.number }} de {{ page.paginator.num_pages }}</span>
+  <ul class="pagination mb-0 ms-auto">
+    {% if page.has_previous %}<li class="page-item"><a class="page-link" href="?{{ querystring }}&page={{ page.previous_page_number }}">Anterior</a></li>{% endif %}
+    {% if page.has_next %}<li class="page-item"><a class="page-link" href="?{{ querystring }}&page={{ page.next_page_number }}">Siguiente</a></li>{% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

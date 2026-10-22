@@ -1,0 +1,28 @@
+services:
+  admin_doublee:
+    image: ${IMAGEN}
+    build: .
+    container_name: ${NOMBREAPP}
+    restart: ${RESTART}
+    env_file: .env
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY}
+    ports:
+      - ${PUERTO}:${PUERTO}
+    volumes:
+      - .:${VOLUMEN}
+    # Permite llegar al MySQL de la máquina (MAMP) con DB_HOST=host.docker.internal
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:${PUERTO} --workers ${WORKERS} --timeout 120 ${GUNICORN_EXTRA}"
+    networks:
+      - network_mas_docker
+
+networks:
+  network_mas_docker:
+    external: true

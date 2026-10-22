@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{{ ticket.folio }}{% endblock %}
+{% block heading %}<a href="{% url 'support:list' %}" class="text-muted text-decoration-none">Soporte</a> / {{ ticket.folio }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-12 col-xl-8">
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2 flex-wrap">
+        {% include "applications/_badge.html" with application=ticket.application %}
+        <span class="fw-semibold">{{ ticket.get_issue_display }}</span>
+        {% include "support/_status_badge.html" %}
+        <span class="ms-auto text-muted small">Recibido {{ ticket.created_at|date:"d/m/Y H:i:s" }}</span>
+      </div>
+      <div class="card-body">
+        <dl class="info-grid">
+          <dt>Aplicación</dt><dd><a href="{% url 'applications:edit' ticket.application.pk %}">{{ ticket.application.name }}</a> <span class="mono small text-muted">({{ ticket.application.code }})</span></dd>
+          <dt>Correo</dt><dd><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></dd>
+          {% if ticket.name %}<dt>Nombre</dt><dd>{{ ticket.name }}</dd>{% endif %}
+          {% if ticket.phone %}<dt>Teléfono</dt><dd>{{ ticket.phone }}</dd>{% endif %}
+          <dt>Folio API</dt><dd class="mono small">{{ ticket.public_id }}</dd>
+        </dl>
+        <h6 class="section-label">Mensaje</h6>
+        <div class="message">{{ ticket.message|default:"(sin mensaje)"|linebreaksbr }}</div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Imágenes ({{ ticket.attachments.all|length }})</div>
+      <div class="card-body">
+        {% if ticket.attachments.all %}
+          <div class="gallery">
+            {% for img in ticket.attachments.all %}
+              <button type="button" class="thumb" data-bs-toggle="modal" data-bs-target="#imgModal"
+                      data-src="{% url 'support:attachment' img.pk %}" data-name="{{ img.original_name }}">
+                <img src="{% url 'support:attachment' img.pk %}" alt="{{ img.original_name }}" loading="lazy">
+                <span>{{ img.width }}×{{ img.height }} · {{ img.size|filesizeformat }}</span>
+              </button>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">El cliente no adjuntó imágenes.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Datos recibidos por la API</div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          {% for key, value in ticket.payload.items %}
+            <tr><th class="mono small text-muted" style="width:35%">{{ key }}</th><td class="text-break">{{ value }}</td></tr>
+          {% empty %}
+            <tr><td class="text-muted">Sin datos.</td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <div class="card mb-3">
+      <div class="card-header fw-semibold">Gestión</div>
+      <form class="card-body" method="post" action="{% url 'support:update' ticket.pk %}">
+        {% csrf_token %}
+        <label class="form-label" for="status">Estatus</label>
+        <select class="form-select mb-3" id="status" name="status">
+          {% for value, label in statuses %}<option value="{{ value }}" {% if value == ticket.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        <label class="form-label" for="admin_notes">Notas internas</label>
+        <textarea class="form-control mb-3" id="admin_notes" name="admin_notes" rows="4">{{ ticket.admin_notes }}</textarea>
+        <button class="btn btn-primary w-100">Guardar</button>
+      </form>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header fw-semibold"><i class="bi bi-phone"></i> Dispositivo</div>
+      <div class="card-body">
+        <dl class="info-grid">
+          <dt>Hora del teléfono</dt><dd>{{ ticket.device_time_raw|default:"—" }}</dd>
+          <dt>App</dt><dd>{{ ticket.app_version|default:"—" }}{% if ticket.app_build %} (build {{ ticket.app_build }}){% endif %}</dd>
+          <dt>Android</dt><dd>{{ ticket.android_version|default:"—" }}{% if ticket.android_sdk %} (SDK {{ ticket.android_sdk }}){% endif %}</dd>
+          <dt>Fabricante</dt><dd>{{ ticket.device_manufacturer|default:"—" }}</dd>
+          <dt>Marca</dt><dd>{{ ticket.device_brand|default:"—" }}</dd>
+          <dt>Modelo</dt><dd>{{ ticket.device_model|default:"—" }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header fw-semibold"><i class="bi bi-hdd-network"></i> Conexión</div>
+      <div class="card-body">
+        <dl class="info-grid">
+          <dt>IP</dt><dd class="mono">{{ ticket.ip_address|default:"—" }}</dd>
+          <dt>User agent</dt><dd class="small text-break">{{ ticket.user_agent|default:"—" }}</dd>
+          <dt>Actualizado</dt><dd>{{ ticket.updated_at|date:"d/m/Y H:i" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="imgModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="modal-title small text-muted" id="imgModalName"></span>
+        <a class="btn btn-sm btn-outline-secondary ms-auto me-2" id="imgModalOpen" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Abrir</a>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center"><img id="imgModalImg" class="img-fluid" alt=""></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.getElementById('imgModal').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    document.getElementById('imgModalImg').src = btn.dataset.src;
+    document.getElementById('imgModalOpen').href = btn.dataset.src;
+    document.getElementById('imgModalName').textContent = btn.dataset.name;
+  });
+</script>
+{% endblock %}

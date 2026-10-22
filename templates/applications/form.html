@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{% if application %}Editar {{ application.name }}{% else %}Nueva aplicación{% endif %}{% endblock %}
+{% block heading %}<a href="{% url 'applications:list' %}" class="text-muted text-decoration-none">Aplicaciones</a> / {% if application %}{{ application.name }}{% else %}Nueva{% endif %}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-12 col-xl-7">
+    <form method="post" class="card" novalidate>
+      {% csrf_token %}
+      <div class="card-header fw-semibold">Datos de la aplicación</div>
+      <div class="card-body">
+        {% for error in form.non_field_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
+        {% for field in form %}
+          {% if field.widget_type == "checkbox" %}
+            <div class="form-check form-switch mb-3">
+              {{ field }} <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label|capfirst }}</label>
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            </div>
+          {% else %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label|capfirst }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div class="card-footer bg-white d-flex gap-2">
+        <a href="{% url 'applications:list' %}" class="btn btn-light ms-auto">Cancelar</a>
+        <button class="btn btn-primary">{% if application %}Guardar cambios{% else %}Crear aplicación{% endif %}</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-12 col-xl-5">
+    {% if application %}
+      <div class="card mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-key"></i> Token de la API</div>
+        <div class="card-body">
+          <p class="small text-muted">La app lo envía en <span class="mono">Authorization: Bearer &lt;token&gt;</span>. Con él se identifica de qué app viene cada ticket.</p>
+          <div class="input-group mb-3">
+            <input type="password" class="form-control mono" id="apiToken" value="{{ application.api_token }}" readonly>
+            <button class="btn btn-outline-secondary" type="button" id="toggleToken" title="Mostrar"><i class="bi bi-eye"></i></button>
+            <button class="btn btn-outline-secondary" type="button" id="copyToken" title="Copiar"><i class="bi bi-clipboard"></i></button>
+          </div>
+          <form method="post" action="{% url 'applications:regenerate_token' application.pk %}"
+                onsubmit="return confirm('El token actual dejará de funcionar. ¿Continuar?')">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-arrow-repeat"></i> Regenerar token</button>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body small text-muted">
+          Creada {{ application.created_at|date:"d/m/Y H:i" }} · actualizada {{ application.updated_at|date:"d/m/Y H:i" }}
+        </div>
+      </div>
+    {% else %}
+      <div class="card"><div class="card-body small text-muted">El token de la API se genera al crear la aplicación.</div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if application %}
+<script>
+  const tokenInput = document.getElementById('apiToken');
+  document.getElementById('toggleToken').addEventListener('click', function () {
+    tokenInput.type = tokenInput.type === 'password' ? 'text' : 'password';
+    this.querySelector('i').className = tokenInput.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+  });
+  document.getElementById('copyToken').addEventListener('click', async function () {
+    await navigator.clipboard.writeText(tokenInput.value);
+    this.querySelector('i').className = 'bi bi-check-lg';
+    setTimeout(() => (this.querySelector('i').className = 'bi bi-clipboard'), 1500);
+  });
+</script>
+{% endif %}
+{% endblock %}
