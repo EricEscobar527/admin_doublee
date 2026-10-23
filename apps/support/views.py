@@ -1,4 +1,6 @@
+from django.contrib import messages
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -8,7 +10,7 @@ from apps.accounts.decorators import admin_required
 from apps.applications.models import Application
 
 from .models import SupportAttachment, SupportTicket
-from .realtime import broadcast
+from .realtime import broadcast, broadcast_deleted
 
 
 @admin_required
@@ -54,6 +56,7 @@ def ticket_list(request):
             "status": status,
             "issue": issue,
             "app": app,
+            "active_filters": sum(bool(v) for v in (app, status, issue)),
             "applications": Application.objects.order_by("name"),
             "q": q,
             "querystring": filters.urlencode(),
@@ -87,6 +90,19 @@ def ticket_update(request, pk):
     ticket.save(update_fields=["status", "admin_notes", "updated_at"])
     broadcast("ticket.updated", ticket.pk)
     return redirect("support:detail", pk=pk)
+
+
+@admin_required
+@require_POST
+def ticket_delete(request, pk):
+    ticket = get_object_or_404(SupportTicket, pk=pk)
+    ticket_id, folio = ticket.pk, ticket.folio
+    with transaction.atomic():
+        # El borrado en cascada de las imágenes dispara la limpieza de archivos (signals.py).
+        ticket.delete()
+        transaction.on_commit(lambda: broadcast_deleted(ticket_id, folio))
+    messages.success(request, f"Ticket {folio} eliminado junto con sus imágenes.")
+    return redirect("support:list")
 
 
 @admin_required

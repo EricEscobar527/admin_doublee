@@ -1,4 +1,5 @@
 import io
+import os
 import shutil
 import tempfile
 from datetime import timezone
@@ -11,7 +12,7 @@ from PIL import Image
 
 from apps.applications.models import Application
 
-from .models import SupportTicket
+from .models import SupportAttachment, SupportTicket
 
 TOKEN = "test-token"
 MEDIA = tempfile.mkdtemp()
@@ -133,6 +134,43 @@ class SupportTicketAPITests(TestCase):
         self.assertEqual(self.post(payload()).status_code, 201)
         self.assertEqual(self.post(payload()).status_code, 201)
         self.assertEqual(self.post(payload()).status_code, 429)
+
+
+@override_settings(MEDIA_ROOT=MEDIA, SUPPORT_RATE_LIMIT_IP_PER_HOUR=100, SUPPORT_RATE_LIMIT_EMAIL_PER_HOUR=100)
+class TicketDeleteTests(TestCase):
+    def setUp(self):
+        Application.objects.create(name="Pruebas", code="pruebas", api_token=TOKEN)
+        get_user_model().objects.create_user("admin", "admin@example.com", "S3gura!pass")
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                "/api/support/tickets", payload(images=[png(), png("b.png")]), HTTP_AUTHORIZATION=f"Bearer {TOKEN}"
+            )
+        self.ticket = SupportTicket.objects.get(public_id=response.json()["id"])
+        self.paths = [a.file.path for a in self.ticket.attachments.all()]
+        self.url = reverse("support:delete", args=[self.ticket.pk])
+
+    def login(self):
+        self.client.post(reverse("accounts:login"), {"username": "admin", "password": "S3gura!pass"})
+
+    def test_deletes_ticket_images_and_files(self):
+        self.assertTrue(all(os.path.exists(p) for p in self.paths))
+        self.login()
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(self.url)
+        self.assertRedirects(response, reverse("support:list"))
+        self.assertFalse(SupportTicket.objects.filter(pk=self.ticket.pk).exists())
+        self.assertFalse(SupportAttachment.objects.exists())
+        self.assertFalse(any(os.path.exists(p) for p in self.paths))
+        self.assertFalse(os.path.exists(os.path.dirname(self.paths[0])))
+
+    def test_get_is_not_allowed(self):
+        self.login()
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+        self.assertTrue(SupportTicket.objects.filter(pk=self.ticket.pk).exists())
+
+    def test_requires_login(self):
+        self.assertEqual(self.client.post(self.url).status_code, 302)
+        self.assertTrue(SupportTicket.objects.filter(pk=self.ticket.pk).exists())
 
 
 class PanelAuthTests(TestCase):

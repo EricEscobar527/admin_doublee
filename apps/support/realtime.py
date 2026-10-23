@@ -41,11 +41,20 @@ def _payload(event, ticket_id):
     }
 
 
+def _send(payload):
+    async_to_sync(get_channel_layer().group_send)(GROUP, {"type": "ticket.event", "payload": payload})
+
+
 def broadcast(event, ticket_id):
     """Nunca rompe la petición: si Redis no responde, solo se registra el error."""
     try:
-        async_to_sync(get_channel_layer().group_send)(
-            GROUP, {"type": "ticket.event", "payload": _payload(event, ticket_id)}
-        )
+        _send(_payload(event, ticket_id))
+    except Exception:
+        logger.exception("No se pudo enviar el aviso en vivo del ticket %s", ticket_id)
+
+
+def broadcast_deleted(ticket_id, folio):
+    try:
+        _send({"event": "ticket.deleted", "ticket": {"id": ticket_id, "folio": folio}, "stats": ticket_stats()})
     except Exception:
         logger.exception("No se pudo enviar el aviso en vivo del ticket %s", ticket_id)

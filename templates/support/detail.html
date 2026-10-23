@@ -1,31 +1,35 @@
 {% extends "base.html" %}
 {% block title %}{{ ticket.folio }}{% endblock %}
-{% block heading %}<a href="{% url 'support:list' %}" class="text-muted text-decoration-none">Soporte</a> / {{ ticket.folio }}{% endblock %}
+{% block heading %}<a href="{% url 'support:list' %}" class="text-muted text-decoration-none"><i class="bi bi-chevron-left d-sm-none"></i><span class="d-none d-sm-inline">Soporte /</span></a> {{ ticket.folio }}{% endblock %}
 {% block content %}
-<div class="row g-3">
-  <div class="col-12 col-xl-8">
-    <div class="card mb-3">
+<div class="alert alert-warning d-none" id="ticketDeletedBanner">
+  Otro administrador eliminó este ticket. <a href="{% url 'support:list' %}" class="alert-link">Volver a la lista</a>
+</div>
+{# En móvil las columnas se "aplanan" y cada tarjeta se acomoda con `order`: Gestión queda justo después del reporte. #}
+<div class="detail-layout">
+  <div class="detail-col detail-col-main">
+    <div class="card d-order-1">
       <div class="card-header d-flex align-items-center gap-2 flex-wrap">
         {% include "applications/_badge.html" with application=ticket.application %}
         <span class="fw-semibold">{{ ticket.get_issue_display }}</span>
         {% include "support/_status_badge.html" %}
-        <span class="ms-auto text-muted small">Recibido {{ ticket.created_at|date:"d/m/Y H:i:s" }}</span>
+        <span class="ms-sm-auto text-muted small w-100 w-sm-auto">Recibido {{ ticket.created_at|date:"d/m/Y H:i:s" }}</span>
       </div>
       <div class="card-body">
         <dl class="info-grid">
           <dt>Aplicación</dt><dd><a href="{% url 'applications:edit' ticket.application.pk %}">{{ ticket.application.name }}</a> <span class="mono small text-muted">({{ ticket.application.code }})</span></dd>
-          <dt>Correo</dt><dd><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></dd>
+          <dt>Correo</dt><dd class="text-break"><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></dd>
           {% if ticket.name %}<dt>Nombre</dt><dd>{{ ticket.name }}</dd>{% endif %}
-          {% if ticket.phone %}<dt>Teléfono</dt><dd>{{ ticket.phone }}</dd>{% endif %}
+          {% if ticket.phone %}<dt>Teléfono</dt><dd><a href="tel:{{ ticket.phone }}">{{ ticket.phone }}</a></dd>{% endif %}
           {% if ticket.phone_model %}<dt>Modelo de su teléfono</dt><dd>{{ ticket.phone_model }} <span class="small text-muted">(escrito por el cliente)</span></dd>{% endif %}
-          <dt>Folio API</dt><dd class="mono small">{{ ticket.public_id }}</dd>
+          <dt>Folio API</dt><dd class="mono small text-break">{{ ticket.public_id }}</dd>
         </dl>
         <h6 class="section-label">Mensaje</h6>
         <div class="message">{{ ticket.message|default:"(sin mensaje)"|linebreaksbr }}</div>
       </div>
     </div>
 
-    <div class="card mb-3">
+    <div class="card d-order-3">
       <div class="card-header fw-semibold">Imágenes ({{ ticket.attachments.all|length }})</div>
       <div class="card-body">
         {% if ticket.attachments.all %}
@@ -44,22 +48,25 @@
       </div>
     </div>
 
-    <div class="card mb-3">
-      <div class="card-header fw-semibold">Datos recibidos por la API</div>
-      <div class="table-responsive">
-        <table class="table table-sm mb-0">
+    <div class="card d-order-6">
+      <button class="card-header fw-semibold d-flex align-items-center w-100 border-0 text-start collapsed" type="button"
+              data-bs-toggle="collapse" data-bs-target="#payloadBody" aria-expanded="false">
+        Datos recibidos por la API <i class="bi bi-chevron-down ms-auto collapse-chevron"></i>
+      </button>
+      <div class="collapse" id="payloadBody">
+        <dl class="kv-list mb-0">
           {% for key, value in ticket.payload.items %}
-            <tr><th class="mono small text-muted" style="width:35%">{{ key }}</th><td class="text-break">{{ value }}</td></tr>
+            <div><dt class="mono">{{ key }}</dt><dd>{{ value }}</dd></div>
           {% empty %}
-            <tr><td class="text-muted">Sin datos.</td></tr>
+            <div><dd class="text-muted">Sin datos.</dd></div>
           {% endfor %}
-        </table>
+        </dl>
       </div>
     </div>
   </div>
 
-  <div class="col-12 col-xl-4">
-    <div class="card mb-3">
+  <div class="detail-col detail-col-side">
+    <div class="card d-order-2">
       <div class="card-header fw-semibold">Gestión</div>
       <form class="card-body" method="post" action="{% url 'support:update' ticket.pk %}">
         {% csrf_token %}
@@ -68,12 +75,17 @@
           {% for value, label in statuses %}<option value="{{ value }}" {% if value == ticket.status %}selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
         <label class="form-label" for="admin_notes">Notas internas</label>
-        <textarea class="form-control mb-3" id="admin_notes" name="admin_notes" rows="4">{{ ticket.admin_notes }}</textarea>
+        <textarea class="form-control mb-3" id="admin_notes" name="admin_notes" rows="3">{{ ticket.admin_notes }}</textarea>
         <button class="btn btn-primary w-100">Guardar</button>
+      </form>
+      <form class="card-footer bg-white" method="post" action="{% url 'support:delete' ticket.pk %}"
+            onsubmit="return confirm('¿Eliminar el ticket {{ ticket.folio }}{% if ticket.attachments.all %} y sus {{ ticket.attachments.all|length }} imagen(es){% endif %}? No se puede deshacer.')">
+        {% csrf_token %}
+        <button class="btn btn-outline-danger btn-sm w-100"><i class="bi bi-trash"></i> Eliminar ticket</button>
       </form>
     </div>
 
-    <div class="card mb-3">
+    <div class="card d-order-4">
       <div class="card-header fw-semibold"><i class="bi bi-phone"></i> Dispositivo</div>
       <div class="card-body">
         <dl class="info-grid">
@@ -88,7 +100,7 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card d-order-5">
       <div class="card-header fw-semibold"><i class="bi bi-hdd-network"></i> Conexión</div>
       <div class="card-body">
         <dl class="info-grid">
@@ -102,14 +114,14 @@
 </div>
 
 <div class="modal fade" id="imgModal" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-fullscreen-sm-down">
     <div class="modal-content">
       <div class="modal-header">
-        <span class="modal-title small text-muted" id="imgModalName"></span>
+        <span class="modal-title small text-muted text-truncate" id="imgModalName"></span>
         <a class="btn btn-sm btn-outline-secondary ms-auto me-2" id="imgModalOpen" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Abrir</a>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
-      <div class="modal-body text-center"><img id="imgModalImg" class="img-fluid" alt=""></div>
+      <div class="modal-body d-flex align-items-center justify-content-center"><img id="imgModalImg" class="img-fluid" alt=""></div>
     </div>
   </div>
 </div>
@@ -121,6 +133,11 @@
     document.getElementById('imgModalImg').src = btn.dataset.src;
     document.getElementById('imgModalOpen').href = btn.dataset.src;
     document.getElementById('imgModalName').textContent = btn.dataset.name;
+  });
+  document.addEventListener('support:event', function (e) {
+    if (e.detail.event === 'ticket.deleted' && e.detail.ticket.id === {{ ticket.pk }}) {
+      document.getElementById('ticketDeletedBanner').classList.remove('d-none');
+    }
   });
 </script>
 {% endblock %}

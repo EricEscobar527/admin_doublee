@@ -4,28 +4,41 @@
 {% block content %}
 <form class="card card-body mb-3 filters" method="get">
   <div class="row g-2">
-    <div class="col-12 col-md-4">
-      <input class="form-control" name="q" value="{{ q }}" placeholder="Buscar por folio, correo, mensaje o modelo">
+    <div class="col-12 col-lg-3 d-flex gap-2">
+      <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Folio, correo, mensaje o modelo" aria-label="Buscar">
+      <button type="button" class="btn btn-outline-secondary d-md-none position-relative" data-bs-toggle="collapse"
+              data-bs-target="#moreFilters" aria-expanded="{% if active_filters %}true{% else %}false{% endif %}" aria-label="Más filtros">
+        <i class="bi bi-funnel"></i>
+        {% if active_filters %}<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">{{ active_filters }}</span>{% endif %}
+      </button>
+      <button class="btn btn-primary d-md-none" aria-label="Buscar"><i class="bi bi-search"></i></button>
     </div>
-    <div class="col-12 col-md-2">
-      <select class="form-select" name="app">
-        <option value="">Todas las apps</option>
-        {% for application in applications %}<option value="{{ application.pk }}" {% if application.pk|stringformat:"d" == app %}selected{% endif %}>{{ application.name }}</option>{% endfor %}
-      </select>
+    <div class="col-12 col-lg-9 collapse d-md-block {% if active_filters %}show{% endif %}" id="moreFilters">
+      <div class="row g-2">
+        <div class="col-12 col-md-4 col-lg-3">
+          <select class="form-select" name="app" aria-label="Aplicación">
+            <option value="">Todas las apps</option>
+            {% for application in applications %}<option value="{{ application.pk }}" {% if application.pk|stringformat:"d" == app %}selected{% endif %}>{{ application.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-3 col-lg-3">
+          <select class="form-select" name="issue" aria-label="Tipo">
+            <option value="">Todos los tipos</option>
+            {% for value, label in issues %}<option value="{{ value }}" {% if value == issue %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-3 col-lg-3">
+          <select class="form-select" name="status" aria-label="Estatus">
+            <option value="">Todos los estatus</option>
+            {% for value, label in statuses %}<option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-2 col-lg-3 d-flex gap-2">
+          <button class="btn btn-primary flex-grow-1"><i class="bi bi-search"></i> Filtrar</button>
+          {% if active_filters or q %}<a href="{% url 'support:list' %}" class="btn btn-light" title="Quitar filtros"><i class="bi bi-x-lg"></i></a>{% endif %}
+        </div>
+      </div>
     </div>
-    <div class="col-6 col-md-2">
-      <select class="form-select" name="issue">
-        <option value="">Todos los tipos</option>
-        {% for value, label in issues %}<option value="{{ value }}" {% if value == issue %}selected{% endif %}>{{ label }}</option>{% endfor %}
-      </select>
-    </div>
-    <div class="col-6 col-md-2">
-      <select class="form-select" name="status">
-        <option value="">Todos</option>
-        {% for value, label in statuses %}<option value="{{ value }}" {% if value == status %}selected{% endif %}>{{ label }}</option>{% endfor %}
-      </select>
-    </div>
-    <div class="col-12 col-md-2 d-grid"><button class="btn btn-primary"><i class="bi bi-search"></i> Filtrar</button></div>
   </div>
 </form>
 
@@ -38,12 +51,12 @@
 
 <div class="card">
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
+    <table class="table table-hover align-middle mb-0 table-cards ticket-table">
       <thead>
         <tr>
-          <th>Folio</th><th>App</th><th>Tipo</th><th>Correo</th><th class="d-none d-lg-table-cell">Dispositivo</th>
-          <th class="d-none d-md-table-cell">Versión</th><th class="text-center"><i class="bi bi-image"></i></th>
-          <th>Estatus</th><th class="d-none d-md-table-cell">Recibido</th>
+          <th>Folio</th><th>App</th><th>Tipo</th><th>Correo</th><th>Dispositivo</th>
+          <th>Versión</th><th class="text-center"><i class="bi bi-image" aria-label="Imágenes"></i></th>
+          <th>Estatus</th><th>Recibido</th>
         </tr>
       </thead>
       <tbody id="ticketRows" data-page="{{ page.number }}" data-app="{{ app }}" data-status="{{ status }}" data-issue="{{ issue }}" data-q="{{ q }}">
@@ -58,7 +71,7 @@
 </div>
 
 {% if page.paginator.num_pages > 1 %}
-<nav class="mt-3 d-flex align-items-center gap-3">
+<nav class="mt-3 d-flex flex-wrap align-items-center gap-2">
   <span class="text-muted small">{{ page.paginator.count }} tickets · página {{ page.number }} de {{ page.paginator.num_pages }}</span>
   <ul class="pagination mb-0 ms-auto">
     {% if page.has_previous %}<li class="page-item"><a class="page-link" href="?{{ querystring }}&page={{ page.previous_page_number }}">Anterior</a></li>{% endif %}
@@ -84,9 +97,13 @@
 
     document.addEventListener('support:event', function (e) {
       const data = e.detail;
+      const row = tbody.querySelector('[data-ticket-id="' + data.ticket.id + '"]');
       if (data.event === 'ticket.updated') {
-        const row = tbody.querySelector('[data-ticket-id="' + data.ticket.id + '"]');
         if (row) { row.outerHTML = data.html.row; }
+        return;
+      }
+      if (data.event === 'ticket.deleted') {
+        row?.remove();
         return;
       }
       if (data.event !== 'ticket.created') return;

@@ -40,6 +40,10 @@
         if (existing) existing.outerHTML = data.html.latest;
         return;
       }
+      if (data.event === 'ticket.deleted') {
+        existing?.remove();
+        return;
+      }
       if (data.event === 'ticket.created' && !existing) {
         list.querySelector('.empty-row')?.remove();
         list.insertAdjacentHTML('afterbegin', data.html.latest);

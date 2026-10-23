@@ -101,6 +101,16 @@ class BroadcastTests(TestCase):
         self.assertEqual(payload["event"], "ticket.updated")
         self.assertEqual(payload["ticket"]["status"], "resolved")
 
+    def test_delete_is_broadcast(self):
+        user = get_user_model().objects.create_user("admin", "admin@example.com", "S3gura!pass")
+        ticket = SupportTicket.objects.create(application=self.app, issue="other", email="b@example.com")
+        self.client.cookies["access_token"] = str(RefreshToken.for_user(user).access_token)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(reverse("support:delete", args=[ticket.pk]))
+        payload = self.receive()
+        self.assertEqual(payload, {"event": "ticket.deleted", "ticket": {"id": ticket.pk, "folio": ticket.folio}, "stats": payload["stats"]})
+        self.assertEqual(payload["stats"]["total"], 0)
+
 
 class WebSocketCookieAuthTests(TestCase):
     def test_user_from_cookies(self):

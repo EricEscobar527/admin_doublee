@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{% if application %}Editar {{ application.name }}{% else %}Nueva aplicación{% endif %}{% endblock %}
-{% block heading %}<a href="{% url 'applications:list' %}" class="text-muted text-decoration-none">Aplicaciones</a> / {% if application %}{{ application.name }}{% else %}Nueva{% endif %}{% endblock %}
+{% block heading %}<a href="{% url 'applications:list' %}" class="text-muted text-decoration-none"><i class="bi bi-chevron-left d-sm-none"></i><span class="d-none d-sm-inline">Aplicaciones /</span></a> {% if application %}{{ application.name }}{% else %}Nueva aplicación{% endif %}{% endblock %}
 {% block content %}
 <div class="row g-3">
   <div class="col-12 col-xl-7">
