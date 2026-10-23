@@ -8,6 +8,7 @@ from apps.accounts.decorators import admin_required
 from apps.applications.models import Application
 
 from .models import SupportAttachment, SupportTicket
+from .realtime import broadcast
 
 
 @admin_required
@@ -29,7 +30,13 @@ def ticket_list(request):
     if issue in SupportTicket.Issue.values:
         tickets = tickets.filter(issue=issue)
     if q:
-        search = Q(email__icontains=q) | Q(message__icontains=q) | Q(name__icontains=q) | Q(device_model__icontains=q)
+        search = (
+            Q(email__icontains=q)
+            | Q(message__icontains=q)
+            | Q(name__icontains=q)
+            | Q(phone_model__icontains=q)
+            | Q(device_model__icontains=q)
+        )
         if q.upper().startswith("SOP-") and q[4:].isdigit():
             search |= Q(pk=int(q[4:]))
         elif q.isdigit():
@@ -78,6 +85,7 @@ def ticket_update(request, pk):
         ticket.status = status
     ticket.admin_notes = request.POST.get("admin_notes", ticket.admin_notes)
     ticket.save(update_fields=["status", "admin_notes", "updated_at"])
+    broadcast("ticket.updated", ticket.pk)
     return redirect("support:detail", pk=pk)
 
 

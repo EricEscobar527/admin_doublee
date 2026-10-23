@@ -71,6 +71,18 @@ body { background: var(--page-bg); }
 .thumb span { font-size: .75rem; color: #6b7280; padding: .35rem; }
 .thumb:hover { border-color: var(--sidebar-active); }
 
+/* En vivo */
+.live-status { display: inline-flex; align-items: center; gap: .4rem; font-size: .8rem; color: #6b7280; }
+.live-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #9ca3af; }
+.live-status[data-state="online"] .live-dot { background: #16a34a; box-shadow: 0 0 0 0 rgba(22,163,74,.5); animation: live-pulse 2s infinite; }
+.live-status[data-state="offline"] .live-dot { background: #dc2626; }
+@keyframes live-pulse { 70% { box-shadow: 0 0 0 .45rem rgba(22,163,74,0); } 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); } }
+.live-flash { animation: live-flash 2.5s ease-out; }
+@keyframes live-flash { from { background-color: #dbeafe; } to { background-color: transparent; } }
+tr.live-flash > td { animation: live-flash 2.5s ease-out; }
+.live-toast { border-left: 4px solid var(--sidebar-active); }
+@media (prefers-reduced-motion: reduce) { .live-flash, tr.live-flash > td, .live-status .live-dot { animation: none !important; } }
+
 /* Login */
 .login-page { min-height: 100vh; display: grid; place-items: center; padding: 1rem; background: linear-gradient(135deg, #111827, #1e3a8a); }
 .login-card { width: 100%; max-width: 380px; background: #fff; border-radius: 1rem; padding: 2rem; box-shadow: 0 20px 50px rgba(0,0,0,.25); }

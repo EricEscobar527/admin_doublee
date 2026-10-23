@@ -25,9 +25,9 @@ def png(name="captura.png"):
 
 def payload(**extra):
     data = {
-        "issue": SupportTicket.Issue.APP_ERROR,
+        "issue": SupportTicket.Issue.WRONG_CALCULATION,
         "email": "Cliente@Example.com",
-        "message": "La app se cierra al abrir el mapa",
+        "phone_model": "Samsung Galaxy A54",
         "device_time": "2026-10-22T13:05:09-06:00",
         "app_version": "1.0.0",
         "app_build": "1",
@@ -99,8 +99,22 @@ class SupportTicketAPITests(TestCase):
         self.assertIn("issue", response.json())
         self.assertIn("email", response.json())
 
-    def test_rejects_missing_required_field_for_issue(self):
-        self.assertEqual(self.post(payload(message="")).status_code, 400)
+    def test_message_required_only_for_other(self):
+        response = self.post(payload(issue=SupportTicket.Issue.OTHER, message=""))
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("message", response.json())
+        self.assertEqual(self.post(payload(issue=SupportTicket.Issue.OTHER, message="Ayuda")).status_code, 201)
+        self.assertEqual(self.post(payload(issue=SupportTicket.Issue.ALERT_NOT_SHOWN)).status_code, 201)
+
+    def test_message_and_phone_model_max_length(self):
+        self.assertEqual(self.post(payload(message="x" * 1001)).status_code, 400)
+        self.assertEqual(self.post(payload(phone_model="x" * 101)).status_code, 400)
+
+    def test_saves_phone_model(self):
+        response = self.post(payload())
+        ticket = SupportTicket.objects.get(public_id=response.json()["id"])
+        self.assertEqual(ticket.phone_model, "Samsung Galaxy A54")
+        self.assertEqual(ticket.message, "")
 
     def test_rejects_fake_image(self):
         fake = SimpleUploadedFile("foto.jpg", b"<?php echo 1; ?>", content_type="image/jpeg")

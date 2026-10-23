@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "channels",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "storages",
@@ -37,6 +38,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+# WebSockets: Redis comparte los avisos entre réplicas. Sin REDIS_URL (pruebas) se usa memoria.
+REDIS_URL = config("REDIS_URL", default="")
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels_redis.core.RedisChannelLayer", "CONFIG": {"hosts": [REDIS_URL]}}
+    }
+else:
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 TEMPLATES = [
     {
@@ -70,7 +81,8 @@ else:
             "PASSWORD": config("DB_PASSWORD"),
             "HOST": config("DB_HOST"),
             "PORT": config("DB_PORT", default="3306"),
-            "CONN_MAX_AGE": 60,
+            # Con ASGI las conexiones persistentes no se reciclan bien; se abre una por petición.
+            "CONN_MAX_AGE": 0,
             "OPTIONS": {"charset": "utf8mb4"},
         }
     }

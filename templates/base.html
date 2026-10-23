@@ -39,7 +39,10 @@
         <i class="bi bi-list"></i>
       </button>
       <h1 class="page-title">{% block heading %}{% endblock %}</h1>
-      <div class="dropdown ms-auto">
+      <span class="live-status ms-auto" id="liveStatus" data-state="connecting" title="Avisos en vivo">
+        <span class="live-dot"></span><span class="live-label d-none d-sm-inline">Conectando…</span>
+      </span>
+      <div class="dropdown">
         <button class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown">
           <i class="bi bi-person-circle"></i> <span class="d-none d-sm-inline">{{ user.get_full_name|default:user.username }}</span>
         </button>
@@ -64,6 +67,8 @@
     </main>
   </div>
 </div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="liveToasts"></div>
+<script src="{% static 'js/realtime.js' %}" data-ws-path="/ws/support/" data-list-url="{% url 'support:list' %}" defer></script>
 {% endblock %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% block scripts %}{% endblock %}

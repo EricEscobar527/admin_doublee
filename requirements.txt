@@ -6,4 +6,12 @@ Pillow==11.3.0
 mysqlclient==2.2.7
 django-storages[s3]==1.14.6
 gunicorn==23.0.0
+uvicorn[standard]==0.34.0
+uvicorn-worker==0.3.0
+channels==4.2.2
+channels-redis==4.2.1
+# redis-py 8.x rompe la lectura bloqueante de channels-redis 4.2 (TimeoutError)
+redis==5.2.1
+# Lo requiere channels.testing en las pruebas
+daphne==4.1.2
 whitenoise==6.9.0

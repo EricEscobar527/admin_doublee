@@ -16,10 +16,28 @@ GRANT ALL PRIVILEGES ON admin_doublee.* TO 'admin_doublee'@'%';
 cp .env.example .env                       # y llenar secretos
 docker network create network_mas_docker   # solo si no existe
 docker compose up -d --build               # aplica las migraciones (crea las tablas)
-docker exec -it admin-doublee-dev python manage.py createsuperuser
+docker compose exec admin_doublee python manage.py createsuperuser
 ```
 
 Panel: http://localhost:8010
+
+### Servicios
+
+| Servicio | Qué hace |
+|---|---|
+| `admin_doublee_nginx` | Balanceador y única entrada (`PUERTO` → 80). Sirve `/static/`, límite de subida 60 MB, pasa la IP real en `X-Forwarded-For`. Config en `nginx/default.conf` |
+| `admin_doublee` | Django + gunicorn, `REPLICAS` réplicas en el puerto interno 8000 |
+| `admin_doublee_migrate` | Corre `migrate` y `collectstatic` una vez antes de las réplicas y termina |
+| `admin_doublee_redis` | Comparte los avisos en vivo (WebSockets) entre las réplicas |
+
+### En vivo
+
+Django corre como ASGI (gunicorn + uvicorn) con Django Channels. El panel abre un WebSocket en `/ws/support/` (solo admins con sesión, Origin validado contra `ALLOWED_HOSTS`). Cuando la API crea un ticket o un admin cambia su estatus, se manda a todos los navegadores conectados: el dashboard actualiza contadores y "Soportes recientes", la lista de tickets agrega la fila (si entra en los filtros actuales) y aparece una notificación. El indicador "En vivo" de la barra superior muestra el estado de la conexión, que se reconecta sola.
+
+Comandos de Django: `docker compose exec admin_doublee python manage.py <comando>`.
+Si cambias `REPLICAS`, reinicia nginx para que las detecte: `docker compose restart admin_doublee_nginx`.
+
+En Windows/Mac, Docker Desktop oculta la IP real del cliente (todas llegan como `172.x.x.x`), así que el límite por IP solo es útil en el servidor Linux.
 
 Soporta MySQL 5.7 (el de MAMP) mediante `config/mysql57`; para producción se recomienda MySQL 8.
 
@@ -58,4 +76,4 @@ Sin `AWS_STORAGE_BUCKET_NAME` se guardan en `./media`. Con S3 (o compatible vía
 
 ## Producción
 
-`ENTORNO=prod`, `GUNICORN_EXTRA=` (sin `--reload`), `ALLOWED_HOSTS` y `CSRF_TRUSTED_ORIGINS` con tu dominio, HTTPS en el proxy y `TRUST_X_FORWARDED_FOR=True` si hay nginx delante. Si nginx recibe los archivos, sube `client_max_body_size` a 60M o más.
+`ENTORNO=prod`, `GUNICORN_EXTRA=` (sin `--reload`), `ALLOWED_HOSTS` y `CSRF_TRUSTED_ORIGINS` con tu dominio, y HTTPS (certificado en nginx o en el balanceador del proveedor). Si hay otro proxy delante de este nginx, ajusta `X-Forwarded-For` en `nginx/default.conf` para no perder la IP real.

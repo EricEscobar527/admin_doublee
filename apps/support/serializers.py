@@ -4,10 +4,7 @@ from rest_framework import serializers
 from .models import SupportTicket
 
 # Campos obligatorios adicionales según el tipo de reporte.
-# TODO: ajustar a las reglas reales de la app.
 REQUIRED_FIELDS_BY_ISSUE = {
-    SupportTicket.Issue.APP_ERROR: ["message"],
-    SupportTicket.Issue.ACCOUNT: ["message"],
     SupportTicket.Issue.OTHER: ["message"],
 }
 
@@ -24,11 +21,13 @@ DEVICE_FIELDS = [
 
 class SupportTicketSerializer(serializers.ModelSerializer):
     device_time = serializers.CharField(required=False, allow_blank=True, max_length=40)
+    # La app limita el texto a 1000 caracteres; se valida igual aquí.
+    message = serializers.CharField(required=False, allow_blank=True, max_length=1000)
 
     class Meta:
         model = SupportTicket
-        fields = ["issue", "email", "name", "phone", "message", "device_time", *DEVICE_FIELDS]
-        extra_kwargs = {name: {"required": False} for name in ["name", "phone", "message", *DEVICE_FIELDS]}
+        fields = ["issue", "email", "name", "phone", "phone_model", "message", "device_time", *DEVICE_FIELDS]
+        extra_kwargs = {name: {"required": False} for name in ["name", "phone", "phone_model", *DEVICE_FIELDS]}
 
     def validate_device_time(self, value):
         if not value:

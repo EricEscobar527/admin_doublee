@@ -17,6 +17,7 @@
           <dt>Correo</dt><dd><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></dd>
           {% if ticket.name %}<dt>Nombre</dt><dd>{{ ticket.name }}</dd>{% endif %}
           {% if ticket.phone %}<dt>Teléfono</dt><dd>{{ ticket.phone }}</dd>{% endif %}
+          {% if ticket.phone_model %}<dt>Modelo de su teléfono</dt><dd>{{ ticket.phone_model }} <span class="small text-muted">(escrito por el cliente)</span></dd>{% endif %}
           <dt>Folio API</dt><dd class="mono small">{{ ticket.public_id }}</dd>
         </dl>
         <h6 class="section-label">Mensaje</h6>
@@ -81,7 +82,8 @@
           <dt>Android</dt><dd>{{ ticket.android_version|default:"—" }}{% if ticket.android_sdk %} (SDK {{ ticket.android_sdk }}){% endif %}</dd>
           <dt>Fabricante</dt><dd>{{ ticket.device_manufacturer|default:"—" }}</dd>
           <dt>Marca</dt><dd>{{ ticket.device_brand|default:"—" }}</dd>
-          <dt>Modelo</dt><dd>{{ ticket.device_model|default:"—" }}</dd>
+          <dt>Modelo (Android)</dt><dd>{{ ticket.device_model|default:"—" }}</dd>
+          <dt>Modelo (cliente)</dt><dd>{{ ticket.phone_model|default:"—" }}</dd>
         </dl>
       </div>
     </div>

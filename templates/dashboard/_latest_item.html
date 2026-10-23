@@ -1,0 +1,7 @@
+<a href="{% url 'support:detail' ticket.pk %}" data-ticket-id="{{ ticket.pk }}" class="list-group-item list-group-item-action d-flex gap-3 align-items-center">
+  <span class="text-muted small mono">{{ ticket.folio }}</span>
+  {% include "applications/_badge.html" with application=ticket.application %}
+  <span class="text-truncate flex-grow-1">{{ ticket.get_issue_display }} · {{ ticket.email }}</span>
+  {% include "support/_status_badge.html" %}
+  <span class="text-muted small d-none d-md-inline">{{ ticket.created_at|date:"d/m/Y H:i" }}</span>
+</a>

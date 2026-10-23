@@ -11,10 +11,9 @@ def attachment_upload_to(instance, filename):
 
 class SupportTicket(models.Model):
     class Issue(models.TextChoices):
-        # TODO: ajustar a los 3 valores exactos que envía la app.
-        APP_ERROR = "app_error", "Error en la app"
-        ACCOUNT = "account", "Cuenta / acceso"
-        OTHER = "other", "Otro"
+        WRONG_CALCULATION = "wrong_calculation", "Cálculos incorrectos"
+        ALERT_NOT_SHOWN = "alert_not_shown", "No sale la alerta"
+        OTHER = "other", "Otro problema"
 
     class Status(models.TextChoices):
         NEW = "new", "Nuevo"
@@ -34,6 +33,8 @@ class SupportTicket(models.Model):
     name = models.CharField("nombre", max_length=150, blank=True)
     phone = models.CharField("teléfono", max_length=30, blank=True)
     message = models.TextField("mensaje", blank=True)
+    # Lo escribe el usuario (ej. "Samsung Galaxy A54"); distinto de device_model, que lo reporta Android.
+    phone_model = models.CharField("modelo (según cliente)", max_length=100, blank=True)
 
     # Información del dispositivo que envía la app
     device_time = models.DateTimeField("hora del dispositivo", null=True, blank=True)

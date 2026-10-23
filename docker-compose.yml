@@ -1,25 +1,66 @@
+x-django: &django
+  image: ${IMAGEN}
+  build: .
+  env_file: .env
+  volumes:
+    - .:${VOLUMEN}
+  # Permite llegar al MySQL de la máquina (MAMP) con DB_HOST=host.docker.internal
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  networks:
+    - network_mas_docker
+
 services:
+  # Corre una sola vez antes de las réplicas, para que no migren al mismo tiempo.
+  admin_doublee_migrate:
+    <<: *django
+    container_name: ${NOMBREAPP}-migrate
+    restart: "no"
+    command: sh -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput"
+
   admin_doublee:
-    image: ${IMAGEN}
-    build: .
-    container_name: ${NOMBREAPP}
+    <<: *django
     restart: ${RESTART}
-    env_file: .env
     deploy:
+      replicas: ${REPLICAS}
       resources:
         limits:
           memory: ${MEMORY}
+    expose:
+      - "8000"
+    depends_on:
+      admin_doublee_migrate:
+        condition: service_completed_successfully
+      admin_doublee_redis:
+        condition: service_healthy
+    # ASGI (uvicorn) para atender HTTP y WebSockets
+    command: gunicorn config.asgi:application -k uvicorn_worker.UvicornWorker --bind 0.0.0.0:8000 --workers ${WORKERS} --timeout 120 ${GUNICORN_EXTRA}
+
+  # Comparte los avisos en vivo entre las réplicas
+  admin_doublee_redis:
+    image: redis:7.4-alpine
+    container_name: ${NOMBREAPP}-redis
+    restart: ${RESTART}
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - network_mas_docker
+
+  admin_doublee_nginx:
+    image: nginx:1.27-alpine
+    container_name: ${NOMBREAPP}
+    restart: ${RESTART}
     ports:
-      - ${PUERTO}:${PUERTO}
+      - ${PUERTO}:80
     volumes:
-      - .:${VOLUMEN}
-    # Permite llegar al MySQL de la máquina (MAMP) con DB_HOST=host.docker.internal
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:${PUERTO} --workers ${WORKERS} --timeout 120 ${GUNICORN_EXTRA}"
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./staticfiles:/usr/share/nginx/static:ro
+    depends_on:
+      - admin_doublee
     networks:
       - network_mas_docker
 

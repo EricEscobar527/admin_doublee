@@ -29,31 +29,28 @@
   </div>
 </form>
 
+<div class="alert alert-primary d-none" id="newTicketsBanner">
+  <div class="d-flex align-items-center gap-2">
+    <i class="bi bi-bell"></i> <span id="newTicketsText"></span>
+    <a href="{% url 'support:list' %}" class="ms-auto alert-link">Ver los más recientes</a>
+  </div>
+</div>
+
 <div class="card">
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
       <thead>
         <tr>
           <th>Folio</th><th>App</th><th>Tipo</th><th>Correo</th><th class="d-none d-lg-table-cell">Dispositivo</th>
-          <th class="d-none d-md-table-cell">App</th><th class="text-center"><i class="bi bi-image"></i></th>
+          <th class="d-none d-md-table-cell">Versión</th><th class="text-center"><i class="bi bi-image"></i></th>
           <th>Estatus</th><th class="d-none d-md-table-cell">Recibido</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="ticketRows" data-page="{{ page.number }}" data-app="{{ app }}" data-status="{{ status }}" data-issue="{{ issue }}" data-q="{{ q }}">
         {% for ticket in page %}
-          <tr class="row-link" onclick="location.href='{% url 'support:detail' ticket.pk %}'">
-            <td class="mono"><a href="{% url 'support:detail' ticket.pk %}">{{ ticket.folio }}</a></td>
-            <td>{% include "applications/_badge.html" with application=ticket.application %}</td>
-            <td>{{ ticket.get_issue_display }}</td>
-            <td class="text-truncate" style="max-width:220px">{{ ticket.email }}</td>
-            <td class="d-none d-lg-table-cell">{{ ticket.device_brand|default:"—" }} {{ ticket.device_model }}</td>
-            <td class="d-none d-md-table-cell">{{ ticket.app_version|default:"—" }}{% if ticket.app_build %} ({{ ticket.app_build }}){% endif %}</td>
-            <td class="text-center">{{ ticket.image_count|default:"" }}</td>
-            <td>{% include "support/_status_badge.html" %}</td>
-            <td class="d-none d-md-table-cell text-muted small">{{ ticket.created_at|date:"d/m/Y H:i" }}</td>
-          </tr>
+          {% include "support/_row.html" %}
         {% empty %}
-          <tr><td colspan="9"class="text-center text-muted py-4">No hay tickets con estos filtros.</td></tr>
+          <tr class="empty-row"><td colspan="9" class="text-center text-muted py-4">No hay tickets con estos filtros.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -69,4 +66,41 @@
   </ul>
 </nav>
 {% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  (function () {
+    const tbody = document.getElementById('ticketRows');
+    const f = tbody.dataset;
+    let hidden = 0;
+
+    // ¿El ticket nuevo entra en la vista actual (página 1 y mismos filtros)?
+    function fitsView(t) {
+      return f.page === '1' && !f.q
+        && (!f.app || f.app === String(t.application_id))
+        && (!f.status || f.status === t.status)
+        && (!f.issue || f.issue === t.issue);
+    }
+
+    document.addEventListener('support:event', function (e) {
+      const data = e.detail;
+      if (data.event === 'ticket.updated') {
+        const row = tbody.querySelector('[data-ticket-id="' + data.ticket.id + '"]');
+        if (row) { row.outerHTML = data.html.row; }
+        return;
+      }
+      if (data.event !== 'ticket.created') return;
+      if (fitsView(data.ticket)) {
+        tbody.querySelector('.empty-row')?.remove();
+        tbody.insertAdjacentHTML('afterbegin', data.html.row);
+        LiveFlash(tbody.firstElementChild);
+      } else {
+        hidden += 1;
+        document.getElementById('newTicketsText').textContent =
+          hidden === 1 ? 'Llegó 1 ticket nuevo que no se ve con estos filtros.' : 'Llegaron ' + hidden + ' tickets nuevos que no se ven con estos filtros.';
+        document.getElementById('newTicketsBanner').classList.remove('d-none');
+      }
+    });
+  })();
+</script>
 {% endblock %}

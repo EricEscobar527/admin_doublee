@@ -1,0 +1,13 @@
+<tr class="row-link" data-ticket-id="{{ ticket.pk }}" onclick="location.href='{% url 'support:detail' ticket.pk %}'">
+  <td class="mono"><a href="{% url 'support:detail' ticket.pk %}">{{ ticket.folio }}</a></td>
+  <td>{% include "applications/_badge.html" with application=ticket.application %}</td>
+  <td>{{ ticket.get_issue_display }}</td>
+  <td class="text-truncate" style="max-width:220px">{{ ticket.email }}</td>
+  <td class="d-none d-lg-table-cell">
+    {% if ticket.phone_model %}{{ ticket.phone_model }}{% else %}{{ ticket.device_brand|default:"—" }} {{ ticket.device_model }}{% endif %}
+  </td>
+  <td class="d-none d-md-table-cell">{{ ticket.app_version|default:"—" }}{% if ticket.app_build %} ({{ ticket.app_build }}){% endif %}</td>
+  <td class="text-center">{{ ticket.image_count|default:"" }}</td>
+  <td>{% include "support/_status_badge.html" %}</td>
+  <td class="d-none d-md-table-cell text-muted small">{{ ticket.created_at|date:"d/m/Y H:i" }}</td>
+</tr>

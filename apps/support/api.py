@@ -17,6 +17,7 @@ from apps.applications.models import Application
 
 from .images import InvalidImage, inspect_image
 from .models import SupportAttachment, SupportTicket
+from .realtime import broadcast
 from .serializers import SupportTicketSerializer
 
 logger = logging.getLogger(__name__)
@@ -100,6 +101,7 @@ class SupportTicketCreateAPIView(APIView):
                 )
                 attachment.file.save(f"image.{ext}", upload, save=False)
                 attachment.save()
+            transaction.on_commit(lambda: broadcast("ticket.created", ticket.pk))
 
         logger.info("Ticket %s de %s creado (%s imágenes)", ticket.folio, ticket.application.code, len(checked))
         return Response({"id": str(ticket.public_id), "folio": ticket.folio}, status=status.HTTP_201_CREATED)
