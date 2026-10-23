@@ -1,0 +1,36 @@
+# SITE_ADDRESS = tu dominio (ej. admin.midominio.com) → HTTPS automático con Let's Encrypt.
+# Mientras no haya dominio se puede usar ":80" (solo HTTP, por IP).
+{$SITE_ADDRESS} {
+	encode gzip
+
+	# 5 imágenes de 10 MB + campos de texto
+	request_body {
+		max_size 60MB
+	}
+
+	# Estáticos (los genera collectstatic en el volumen compartido)
+	handle_path /static/* {
+		root * /srv/static
+		header Cache-Control "public, max-age=604800"
+		file_server
+	}
+
+	# Las imágenes de soporte solo se sirven a admins desde Django
+	handle /media/* {
+		respond 404
+	}
+
+	# Django (HTTP y WebSockets), repartido entre todas las réplicas.
+	# Caddy ignora el X-Forwarded-For que mande el cliente y pone la IP real.
+	handle {
+		reverse_proxy {
+			dynamic a {
+				name admin_doublee
+				port 8000
+				refresh 10s
+			}
+			lb_policy least_conn
+			lb_try_duration 5s
+		}
+	}
+}

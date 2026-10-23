@@ -176,7 +176,9 @@ SIMPLE_JWT = {
 
 JWT_ACCESS_COOKIE = "access_token"
 JWT_REFRESH_COOKIE = "refresh_token"
-JWT_COOKIE_SECURE = config("JWT_COOKIE_SECURE", default=not DEBUG, cast=bool)
+# Cookies solo por HTTPS. En prod se puede desactivar temporalmente mientras se usa la IP sin dominio.
+SECURE_COOKIES = config("SECURE_COOKIES", default=not DEBUG, cast=bool)
+JWT_COOKIE_SECURE = SECURE_COOKIES
 
 # API pública de soporte (apps móviles). Cada app usa el token de su registro en "Aplicaciones".
 SUPPORT_MAX_FILES = 5
@@ -188,8 +190,8 @@ TRUST_X_FORWARDED_FOR = config("TRUST_X_FORWARDED_FOR", default=False, cast=bool
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = SECURE_COOKIES
+    SESSION_COOKIE_SECURE = SECURE_COOKIES
 
 LOGGING = {
     "version": 1,

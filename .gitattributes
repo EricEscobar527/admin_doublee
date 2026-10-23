@@ -1,0 +1,4 @@
+# Archivos que se ejecutan en Linux (VPS / contenedores): siempre con saltos de línea LF
+*.sh text eol=lf
+Caddyfile text eol=lf
+nginx/*.conf text eol=lf
