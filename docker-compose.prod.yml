@@ -21,6 +21,9 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       TZ: America/Mexico_City
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # Solo en 127.0.0.1 del VPS (no es accesible desde internet): para entrar con un túnel SSH.
+    ports:
+      - "127.0.0.1:${DB_PORT_HOST:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
