@@ -1,3 +1,6 @@
+from datetime import datetime
+from datetime import timezone as dt_timezone
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -5,6 +8,52 @@ from django.urls import reverse
 from apps.support.models import SupportTicket
 
 from .models import Application
+
+
+class AppConfigAPITests(TestCase):
+    url = "/api/app/config"
+
+    def test_returns_config_of_token_app(self):
+        Application.objects.create(
+            name="ViajeOK",
+            code="viajeok",
+            api_token="tok",
+            beta_ends_at=datetime(2026, 12, 1, 6, 0, tzinfo=dt_timezone.utc),
+            beta_message="Versión beta gratuita hasta el 1 de diciembre",
+            subscription_product_id="viajeok_mensual",
+            min_supported_build=3,
+        )
+        response = self.client.get(self.url, HTTP_AUTHORIZATION="Bearer tok")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "paywall_enabled": False,
+                "beta_ends_at": "2026-12-01T00:00:00-06:00",
+                "beta_message": "Versión beta gratuita hasta el 1 de diciembre",
+                "subscription_product_id": "viajeok_mensual",
+                "min_supported_build": 3,
+            },
+        )
+        self.assertIn("max-age=300", response["Cache-Control"])
+
+    def test_empty_config_and_auth(self):
+        Application.objects.create(name="B", code="b", api_token="tok2")
+        body = self.client.get(self.url + "/", HTTP_AUTHORIZATION="Bearer tok2").json()
+        self.assertEqual((body["beta_ends_at"], body["min_supported_build"], body["paywall_enabled"]), (None, None, False))
+        self.assertEqual(self.client.get(self.url).status_code, 401)
+
+
+class PrivacyPageTests(TestCase):
+    def test_public_without_login(self):
+        response = self.client.get("/viajeok/privacidad/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Política de privacidad de ViajeOK")
+        self.assertContains(response, "se descartan al cerrarse la oferta")
+        self.assertNotContains(response, "PENDIENTE: texto del aviso")
+        self.assertContains(response, "PENDIENTE: correo de contacto")
+        with self.settings(PRIVACY_CONTACT_EMAIL="privacidad@doublee.cloud"):
+            self.assertContains(self.client.get("/viajeok/privacidad/"), "mailto:privacidad@doublee.cloud")
 
 
 class ApplicationCRUDTests(TestCase):
@@ -24,6 +73,27 @@ class ApplicationCRUDTests(TestCase):
         application = Application.objects.get(code="nueva-app")
         self.assertRedirects(response, reverse("applications:edit", args=[application.pk]))
         self.assertGreaterEqual(len(application.api_token), 40)
+
+    def test_edit_remote_config(self):
+        application = Application.objects.create(name="A", code="a")
+        data = {
+            "name": "A", "code": "a", "color": "#000000", "is_active": "on",
+            "paywall_enabled": "on", "beta_ends_at": "2026-12-01T00:00", "beta_message": "Beta",
+            "subscription_product_id": "viajeok_mensual", "min_supported_build": "3",
+        }
+        self.client.post(reverse("applications:edit", args=[application.pk]), data)
+        application.refresh_from_db()
+        self.assertTrue(application.paywall_enabled)
+        self.assertEqual(application.min_supported_build, 3)
+        self.assertEqual(application.beta_ends_at, datetime(2026, 12, 1, 6, 0, tzinfo=dt_timezone.utc))
+
+    def test_paywall_requires_product(self):
+        application = Application.objects.create(name="A", code="a")
+        response = self.client.post(
+            reverse("applications:edit", args=[application.pk]),
+            {"name": "A", "code": "a", "color": "#000000", "paywall_enabled": "on"},
+        )
+        self.assertIn("subscription_product_id", response.context["form"].errors)
 
     def test_rejects_duplicate_code_and_bad_color(self):
         Application.objects.create(name="A", code="dup")

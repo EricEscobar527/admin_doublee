@@ -91,6 +91,15 @@ body { background: var(--page-bg); }
   .ticket-table .c-device { grid-area: device; color: #6b7280; font-size: .8rem; }
   .ticket-table .c-images { grid-area: images; color: #6b7280; font-size: .8rem; justify-self: end; }
 
+  .sub-table tr { grid-template-columns: 1fr auto; grid-template-areas: "app status" "product expires" "install verified"; }
+  .sub-table .c-app { grid-area: app; }
+  .sub-table .c-status { grid-area: status; justify-self: end; }
+  .sub-table .c-product { grid-area: product; }
+  .sub-table .c-expires { grid-area: expires; justify-self: end; font-size: .875rem; }
+  .sub-table .c-expires::before { content: "Vence "; color: #6b7280; }
+  .sub-table .c-install { grid-area: install; }
+  .sub-table .c-verified { grid-area: verified; justify-self: end; }
+
   .app-table tr { grid-template-columns: 1fr auto auto; grid-template-areas: "app status actions" "code tickets tickets"; }
   .app-table .c-app { grid-area: app; }
   .app-table .c-status { grid-area: status; }

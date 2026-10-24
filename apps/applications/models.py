@@ -32,6 +32,27 @@ class Application(models.Model):
     )
     api_token = models.CharField("token API", max_length=64, unique=True, default=generate_api_token, editable=False)
     is_active = models.BooleanField("activa", default=True, help_text="Si se desactiva, la API rechaza sus envíos.")
+
+    # Configuración remota que la app consulta al abrir (GET /api/app/config).
+    paywall_enabled = models.BooleanField(
+        "cobro activado",
+        default=False,
+        help_text="Apagado: todo gratis. Encendido: la app pide la suscripción.",
+    )
+    beta_ends_at = models.DateTimeField(
+        "fin de la beta", null=True, blank=True, help_text="Informativa: se muestra en el aviso, no activa el cobro."
+    )
+    beta_message = models.CharField("mensaje de beta", max_length=200, blank=True)
+    subscription_product_id = models.CharField(
+        "ID de la suscripción", max_length=100, blank=True, help_text="El ID del producto en Play Console, ej. viajeok_mensual."
+    )
+    min_supported_build = models.PositiveIntegerField(
+        "build mínimo",
+        null=True,
+        blank=True,
+        help_text="Si la app instalada tiene un build menor (el +3 de 1.0.2+3), pide actualizar. Vacío = sin mínimo.",
+    )
+
     created_at = models.DateTimeField("creada", auto_now_add=True)
     updated_at = models.DateTimeField("actualizada", auto_now=True)
 

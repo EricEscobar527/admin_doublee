@@ -54,6 +54,17 @@ Abre `https://admin.tudominio.com`. Caddy obtiene el certificado solo en el prim
 
 La migración crea "Análisis Viaje" con un token nuevo. Cópialo en **Aplicaciones → Análisis Viaje** y ponlo en la app junto con `baseUrl = https://admin.tudominio.com/api`.
 
+## 4b. Llave de Google Play (verificación de suscripciones)
+
+Descarga la llave JSON de la cuenta de servicio y súbela desde tu PC (nunca a git):
+
+```powershell
+ssh root@IP_DEL_VPS "mkdir -p /opt/admin-doublee/secrets && chmod 700 /opt/admin-doublee/secrets"
+scp C:\ruta\a\la-llave.json root@IP_DEL_VPS:/opt/admin-doublee/secrets/google-play.json
+```
+
+En el `.env` del servidor deja `GOOGLE_PLAY_SERVICE_ACCOUNT_FILE=/home/admin-doublee/secrets/google-play.json` y `PRIVACY_CONTACT_EMAIL` con tu correo, y aplica con `docker compose -f docker-compose.prod.yml up -d`.
+
 ## 5. Actualizar
 
 En tu PC: commit y `git push`. Luego, desde la carpeta del proyecto:

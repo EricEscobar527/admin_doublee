@@ -28,6 +28,9 @@
       <div class="collapse {% if active_menu == 'support' %}show{% endif %}" id="menu-support">
         <a href="{% url 'support:list' %}" class="nav-subitem {% if active_menu == 'support' %}active{% endif %}">Tickets de soporte</a>
       </div>
+      <a href="{% url 'subscriptions:list' %}" class="nav-item {% if active_menu == 'subscriptions' %}active{% endif %}">
+        <i class="bi bi-credit-card"></i> Suscripciones
+      </a>
       <a href="{% url 'applications:list' %}" class="nav-item {% if active_menu == 'applications' %}active{% endif %}">
         <i class="bi bi-grid-3x3-gap"></i> Aplicaciones
       </a>

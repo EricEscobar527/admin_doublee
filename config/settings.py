@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.dashboard",
     "apps.applications",
+    "apps.subscriptions",
+    "apps.legal",
     "apps.support",
 ]
 
@@ -185,6 +187,12 @@ SUPPORT_MAX_FILES = 5
 SUPPORT_MAX_FILE_SIZE = 10 * 1024 * 1024
 SUPPORT_RATE_LIMIT_IP_PER_HOUR = config("SUPPORT_RATE_LIMIT_IP_PER_HOUR", default=10, cast=int)
 SUPPORT_RATE_LIMIT_EMAIL_PER_HOUR = config("SUPPORT_RATE_LIMIT_EMAIL_PER_HOUR", default=5, cast=int)
+# Google Play Developer API: llave JSON de la cuenta de servicio (solo en el servidor, nunca en git).
+GOOGLE_PLAY_SERVICE_ACCOUNT_FILE = config("GOOGLE_PLAY_SERVICE_ACCOUNT_FILE", default="")
+
+# Política de privacidad pública
+PRIVACY_CONTACT_EMAIL = config("PRIVACY_CONTACT_EMAIL", default="")
+
 # Detrás de un proxy (nginx, load balancer) la IP real llega en X-Forwarded-For.
 TRUST_X_FORWARDED_FOR = config("TRUST_X_FORWARDED_FOR", default=False, cast=bool)
 

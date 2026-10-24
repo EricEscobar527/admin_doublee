@@ -41,7 +41,17 @@ En Windows/Mac, Docker Desktop oculta la IP real del cliente (todas llegan como 
 
 Soporta MySQL 5.7 (el de MAMP) mediante `config/mysql57`; para producción se recomienda MySQL 8.
 
-Pruebas: `docker compose run --rm --no-deps -e DB_ENGINE=sqlite admin_doublee python manage.py test`
+Pruebas (SQLite y canales en memoria): `docker compose run --rm --no-deps admin_doublee python manage.py test --settings=config.settings_test`
+
+## API de las apps
+
+| Endpoint | Para qué |
+|---|---|
+| `POST /api/support/tickets` | Tickets de soporte (abajo) |
+| `GET /api/app/config` | Configuración remota (cobro, beta, build mínimo). Se edita en **Aplicaciones → editar → Configuración remota** |
+| `POST /api/subscriptions/verify` | Verifica una compra con Google Play, la reconoce y la guarda (panel → **Suscripciones**). Responde `503` si Google no responde: la app debe conservar su último resultado |
+
+Política de privacidad pública: `/viajeok/privacidad/` (usa `PRIVACY_CONTACT_EMAIL`).
 
 ## Autenticación
 

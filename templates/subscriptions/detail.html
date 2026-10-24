@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Suscripción{% endblock %}
+{% block heading %}<a href="{% url 'subscriptions:list' %}" class="text-muted text-decoration-none"><i class="bi bi-chevron-left d-sm-none"></i><span class="d-none d-sm-inline">Suscripciones /</span></a> {{ subscription.product_id }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-12 col-xl-6">
+    <div class="card">
+      <div class="card-header d-flex align-items-center gap-2 flex-wrap">
+        {% include "applications/_badge.html" with application=subscription.application %}
+        {% include "subscriptions/_status.html" %}
+      </div>
+      <div class="card-body">
+        <dl class="info-grid">
+          <dt>Producto</dt><dd class="mono">{{ subscription.product_id }}</dd>
+          <dt>Paquete</dt><dd class="mono text-break">{{ subscription.package_name }}</dd>
+          <dt>Estado en Google</dt><dd class="mono small text-break">{{ subscription.state }}</dd>
+          <dt>Con acceso</dt><dd>{% if subscription.active %}Sí{% else %}No{% endif %}</dd>
+          <dt>Prueba gratis</dt><dd>{% if subscription.in_trial %}Sí{% else %}No{% endif %}</dd>
+          <dt>Vence</dt><dd>{{ subscription.expires_at|date:"d/m/Y H:i"|default:"—" }}</dd>
+          <dt>Renovación automática</dt><dd>{% if subscription.auto_renewing %}Sí{% else %}No{% endif %}</dd>
+          <dt>Reconocida</dt><dd>{% if subscription.acknowledged %}Sí{% else %}<span class="text-danger">No (Google la reembolsa a los 3 días)</span>{% endif %}</dd>
+          <dt>Orden</dt><dd class="mono small text-break">{{ subscription.latest_order_id|default:"—" }}</dd>
+          <dt>Install ID</dt><dd class="mono small text-break">{{ subscription.install_id|default:"—" }}</dd>
+          <dt>Token</dt><dd class="mono small text-break">{{ subscription.short_token }}</dd>
+          <dt>Primera vez</dt><dd>{{ subscription.created_at|date:"d/m/Y H:i" }}</dd>
+          <dt>Última verificación</dt><dd>{{ subscription.last_verified_at|date:"d/m/Y H:i" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-6">
+    <div class="card">
+      <button class="card-header fw-semibold d-flex align-items-center w-100 border-0 text-start collapsed" type="button"
+              data-bs-toggle="collapse" data-bs-target="#googleRaw" aria-expanded="false">
+        Respuesta de Google <i class="bi bi-chevron-down ms-auto collapse-chevron"></i>
+      </button>
+      <div class="collapse" id="googleRaw">
+        <pre class="small mb-0 p-3 text-break" style="white-space: pre-wrap">{{ subscription.google_response|pprint }}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

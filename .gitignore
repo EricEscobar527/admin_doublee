@@ -12,3 +12,6 @@ staticfiles/
 mysql/
 .coverage
 htmlcov/
+
+# Llaves (Google Play, etc.)
+secrets/

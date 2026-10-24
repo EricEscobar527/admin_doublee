@@ -15,3 +15,6 @@ redis==5.2.1
 # Lo requiere channels.testing en las pruebas
 daphne==4.1.2
 whitenoise==6.9.0
+# Google Play Developer API (verificación de suscripciones)
+google-api-python-client==2.160.0
+google-auth==2.38.0

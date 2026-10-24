@@ -1,19 +1,15 @@
-import hmac
 import logging
 from datetime import timedelta
 
 from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
 from django.db import transaction
 from django.utils import timezone
-from rest_framework import exceptions, status
-from rest_framework.authentication import BaseAuthentication, get_authorization_header
+from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.applications.models import Application
+from apps.applications.authentication import AppBearerTokenAuthentication, HasAppToken
 
 from .images import InvalidImage, inspect_image
 from .models import SupportAttachment, SupportTicket
@@ -21,30 +17,6 @@ from .realtime import broadcast
 from .serializers import SupportTicketSerializer
 
 logger = logging.getLogger(__name__)
-
-
-class AppBearerTokenAuthentication(BaseAuthentication):
-    """Authorization: Bearer <token>; el token identifica a la aplicación que envía."""
-
-    def authenticate(self, request):
-        parts = get_authorization_header(request).split()
-        if not parts or parts[0].lower() != b"bearer":
-            return None
-        if len(parts) != 2:
-            raise exceptions.AuthenticationFailed("Encabezado Authorization inválido.")
-        token = parts[1].decode(errors="ignore")
-        application = Application.objects.filter(api_token=token, is_active=True).first()
-        if application is None or not hmac.compare_digest(token, application.api_token):
-            raise exceptions.AuthenticationFailed("Token inválido.")
-        return AnonymousUser(), application
-
-    def authenticate_header(self, request):
-        return "Bearer"
-
-
-class HasAppToken(BasePermission):
-    def has_permission(self, request, view):
-        return bool(request.auth)
 
 
 def client_ip(request):

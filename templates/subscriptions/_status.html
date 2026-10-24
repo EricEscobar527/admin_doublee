@@ -1,0 +1,4 @@
+{% if subscription.active %}
+  {% if subscription.in_trial %}<span class="badge status-in_review">En prueba</span>{% else %}<span class="badge status-resolved">{{ subscription.state_display }}</span>{% endif %}
+{% else %}<span class="badge text-bg-secondary">{{ subscription.state_display }}</span>{% endif %}
+{% if subscription.test_purchase %}<span class="badge text-bg-light border">Prueba de Play</span>{% endif %}

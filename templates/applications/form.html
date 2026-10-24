@@ -4,28 +4,23 @@
 {% block content %}
 <div class="row g-3">
   <div class="col-12 col-xl-7">
-    <form method="post" class="card" novalidate>
+    <form method="post" novalidate>
       {% csrf_token %}
-      <div class="card-header fw-semibold">Datos de la aplicación</div>
-      <div class="card-body">
-        {% for error in form.non_field_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
-        {% for field in form %}
-          {% if field.widget_type == "checkbox" %}
-            <div class="form-check form-switch mb-3">
-              {{ field }} <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label|capfirst }}</label>
-              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-            </div>
-          {% else %}
-            <div class="mb-3">
-              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label|capfirst }}</label>
-              {{ field }}
-              {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-              {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-            </div>
-          {% endif %}
-        {% endfor %}
+      <div class="card mb-3">
+        <div class="card-header fw-semibold">Datos de la aplicación</div>
+        <div class="card-body">
+          {% for error in form.non_field_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
+          {% for field in form.general_fields %}{% include "applications/_field.html" %}{% endfor %}
+        </div>
       </div>
-      <div class="card-footer bg-white d-flex gap-2">
+      <div class="card mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-sliders"></i> Configuración remota</div>
+        <div class="card-body">
+          <p class="small text-muted">La app la consulta al abrir en <span class="mono">GET /api/app/config</span> (se guarda en caché hasta 5 minutos). Los cambios aplican sin publicar una versión nueva.</p>
+          {% for field in form.config_fields %}{% include "applications/_field.html" %}{% endfor %}
+        </div>
+      </div>
+      <div class="d-flex gap-2">
         <a href="{% url 'applications:list' %}" class="btn btn-light ms-auto">Cancelar</a>
         <button class="btn btn-primary">{% if application %}Guardar cambios{% else %}Crear aplicación{% endif %}</button>
       </div>

@@ -9,6 +9,8 @@ x-django: &django
   volumes:
     - media:/home/admin-doublee/media
     - static:/home/admin-doublee/staticfiles
+    # Llave de Google Play (no está en git ni en la imagen)
+    - ./secrets:/home/admin-doublee/secrets:ro
 
 services:
   db:
