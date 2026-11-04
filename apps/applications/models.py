@@ -39,7 +39,8 @@ class Application(models.Model):
         default=False,
         help_text="Apagado: todo gratis. Encendido: la app pide la suscripción.",
     )
-    beta_ends_at = models.DateTimeField(
+    # Solo fecha (sin hora ni zona): la app muestra el día y una hora podía cambiarlo según el huso del teléfono.
+    beta_ends_at = models.DateField(
         "fin de la beta", null=True, blank=True, help_text="Informativa: se muestra en el aviso, no activa el cobro."
     )
     beta_message = models.CharField("mensaje de beta", max_length=200, blank=True)

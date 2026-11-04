@@ -12,12 +12,12 @@ class ApplicationForm(forms.ModelForm):
         widgets = {
             "color": forms.TextInput(attrs={"type": "color"}),
             "description": forms.Textarea(attrs={"rows": 3}),
-            "beta_ends_at": forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
+            "beta_ends_at": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["beta_ends_at"].input_formats = ["%Y-%m-%dT%H:%M"]
+        self.fields["beta_ends_at"].input_formats = ["%Y-%m-%d"]
         for name, field in self.fields.items():
             widget = field.widget
             if isinstance(widget, forms.CheckboxInput):

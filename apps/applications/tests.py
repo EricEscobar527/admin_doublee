@@ -1,5 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from datetime import timezone as dt_timezone
+from importlib import import_module
+from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -18,7 +20,7 @@ class AppConfigAPITests(TestCase):
             name="ViajeOK",
             code="viajeok",
             api_token="tok",
-            beta_ends_at=datetime(2026, 12, 1, 6, 0, tzinfo=dt_timezone.utc),
+            beta_ends_at=date(2026, 12, 7),
             beta_message="Versión beta gratuita hasta el 1 de diciembre",
             subscription_product_id="viajeok_mensual",
             min_supported_build=3,
@@ -29,7 +31,7 @@ class AppConfigAPITests(TestCase):
             response.json(),
             {
                 "paywall_enabled": False,
-                "beta_ends_at": "2026-12-01T00:00:00-06:00",
+                "beta_ends_at": "2026-12-07",
                 "beta_message": "Versión beta gratuita hasta el 1 de diciembre",
                 "subscription_product_id": "viajeok_mensual",
                 "min_supported_build": 3,
@@ -42,6 +44,16 @@ class AppConfigAPITests(TestCase):
         body = self.client.get(self.url + "/", HTTP_AUTHORIZATION="Bearer tok2").json()
         self.assertEqual((body["beta_ends_at"], body["min_supported_build"], body["paywall_enabled"]), (None, None, False))
         self.assertEqual(self.client.get(self.url).status_code, 401)
+
+
+class BetaDateMigrationTests(TestCase):
+    def test_converts_utc_datetime_to_mexico_date(self):
+        # 2026-12-07 23:59 en México se guardaba como 2026-12-08 05:59 UTC: debe quedar el 7, no el 8.
+        migration = import_module("apps.applications.migrations.0003_beta_ends_at_date")
+        row = SimpleNamespace(beta_ends_at=datetime(2026, 12, 8, 5, 59, tzinfo=dt_timezone.utc), save=lambda **kw: None)
+        model = SimpleNamespace(objects=SimpleNamespace(exclude=lambda **kw: [row]))
+        migration.to_local_date(SimpleNamespace(get_model=lambda *args: model), None)
+        self.assertEqual(row.beta_ends_on, date(2026, 12, 7))
 
 
 class PrivacyPageTests(TestCase):
@@ -78,14 +90,14 @@ class ApplicationCRUDTests(TestCase):
         application = Application.objects.create(name="A", code="a")
         data = {
             "name": "A", "code": "a", "color": "#000000", "is_active": "on",
-            "paywall_enabled": "on", "beta_ends_at": "2026-12-01T00:00", "beta_message": "Beta",
+            "paywall_enabled": "on", "beta_ends_at": "2026-12-07", "beta_message": "Beta",
             "subscription_product_id": "viajeok_mensual", "min_supported_build": "3",
         }
         self.client.post(reverse("applications:edit", args=[application.pk]), data)
         application.refresh_from_db()
         self.assertTrue(application.paywall_enabled)
         self.assertEqual(application.min_supported_build, 3)
-        self.assertEqual(application.beta_ends_at, datetime(2026, 12, 1, 6, 0, tzinfo=dt_timezone.utc))
+        self.assertEqual(application.beta_ends_at, date(2026, 12, 7))
 
     def test_paywall_requires_product(self):
         application = Application.objects.create(name="A", code="a")
