@@ -13,10 +13,14 @@ def subscription_list(request):
     subscriptions = Subscription.objects.select_related("application")
     app = request.GET.get("app", "")
     active = request.GET.get("active", "")
+    plan = request.GET.get("plan", "")
+    plans = Subscription.objects.exclude(base_plan_id="").values_list("base_plan_id", flat=True).distinct()
     if app.isdigit():
         subscriptions = subscriptions.filter(application_id=int(app))
     if active in ("1", "0"):
         subscriptions = subscriptions.filter(active=active == "1")
+    if plan:
+        subscriptions = subscriptions.filter(base_plan_id=plan)
 
     stats = subscriptions.aggregate(
         total=Count("id"),
@@ -34,6 +38,8 @@ def subscription_list(request):
             "stats": stats,
             "app": app,
             "active": active,
+            "plan": plan,
+            "plans": sorted(plans),
             "applications": Application.objects.order_by("name"),
             "querystring": filters.urlencode(),
             "active_menu": "subscriptions",

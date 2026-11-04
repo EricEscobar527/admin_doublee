@@ -67,6 +67,8 @@ def acknowledge(package_name, product_id, purchase_token):
 @dataclass
 class PurchaseStatus:
     state: str
+    base_plan_id: str
+    offer_id: str
     active: bool
     in_trial: bool
     auto_renewing: bool
@@ -85,12 +87,17 @@ def parse_subscription(data, product_id):
 
     expiries = [parse_datetime(item["expiryTime"]) for item in items if item.get("expiryTime")]
     expires_at = max((e for e in expiries if e), default=None)
+    # El plan base puede ser cualquiera del producto (mensual, trimestral, anual): no se filtra por él.
+    latest = max(items, key=lambda item: item.get("expiryTime") or "")
+    offer = latest.get("offerDetails") or {}
     state = data.get("subscriptionState", "")
     # Cancelada = ya no se renueva, pero el usuario pagó hasta la fecha de vencimiento.
     still_paid = state == "SUBSCRIPTION_STATE_CANCELED" and expires_at is not None and expires_at > timezone.now()
 
     return PurchaseStatus(
         state=state,
+        base_plan_id=offer.get("basePlanId", ""),
+        offer_id=offer.get("offerId", ""),
         active=state in ACCESS_STATES or still_paid,
         in_trial=any("freeTrial" in (item.get("offerPhase") or {}) for item in items),
         auto_renewing=any((item.get("autoRenewingPlan") or {}).get("autoRenewEnabled") for item in items),

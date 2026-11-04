@@ -11,20 +11,26 @@
 
 <form class="card card-body mb-3" method="get">
   <div class="row g-2">
-    <div class="col-12 col-md-5">
+    <div class="col-12 col-md-4">
       <select class="form-select" name="app" aria-label="Aplicación">
         <option value="">Todas las apps</option>
         {% for application in applications %}<option value="{{ application.pk }}" {% if application.pk|stringformat:"d" == app %}selected{% endif %}>{{ application.name }}</option>{% endfor %}
       </select>
     </div>
-    <div class="col-8 col-md-4">
+    <div class="col-6 col-md-3">
+      <select class="form-select" name="plan" aria-label="Plan">
+        <option value="">Todos los planes</option>
+        {% for value in plans %}<option value="{{ value }}" {% if value == plan %}selected{% endif %}>{{ value }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
       <select class="form-select" name="active" aria-label="Estado">
         <option value="">Todas</option>
         <option value="1" {% if active == "1" %}selected{% endif %}>Con acceso</option>
         <option value="0" {% if active == "0" %}selected{% endif %}>Sin acceso</option>
       </select>
     </div>
-    <div class="col-4 col-md-3 d-grid"><button class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button></div>
+    <div class="col-12 col-md-2 d-grid"><button class="btn btn-primary"><i class="bi bi-funnel"></i> Filtrar</button></div>
   </div>
 </form>
 
@@ -32,13 +38,13 @@
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0 table-cards sub-table">
       <thead>
-        <tr><th>App</th><th>Producto</th><th>Estado</th><th>Vence</th><th>Renueva</th><th>Install ID</th><th>Verificada</th></tr>
+        <tr><th>App</th><th>Plan</th><th>Estado</th><th>Vence</th><th>Renueva</th><th>Install ID</th><th>Verificada</th></tr>
       </thead>
       <tbody>
         {% for subscription in page %}
           <tr class="row-link" onclick="location.href='{% url 'subscriptions:detail' subscription.pk %}'">
             <td class="c-app">{% include "applications/_badge.html" with application=subscription.application %}</td>
-            <td class="c-product mono small">{{ subscription.product_id }}</td>
+            <td class="c-product mono small">{{ subscription.base_plan_id|default:"—" }}{% if subscription.offer_id %} <span class="text-muted">· {{ subscription.offer_id }}</span>{% endif %}</td>
             <td class="c-status">{% include "subscriptions/_status.html" %}</td>
             <td class="c-expires">{{ subscription.expires_at|date:"d/m/Y H:i"|default:"—" }}</td>
             <td class="c-renew d-none d-lg-table-cell">{% if subscription.auto_renewing %}Sí{% else %}No{% endif %}</td>

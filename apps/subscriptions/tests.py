@@ -16,11 +16,15 @@ PACKAGE = "cloud.doublee.viajeok"
 PRODUCT = "viajeok_mensual"
 
 
-def google_response(state="SUBSCRIPTION_STATE_ACTIVE", days=30, trial=False, acknowledged=True, product=PRODUCT):
+def google_response(
+    state="SUBSCRIPTION_STATE_ACTIVE", days=30, trial=False, acknowledged=True, product=PRODUCT, plan="mensual"
+):
     expiry = (timezone.now() + timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S.123Z")
+    offer = {"basePlanId": plan, "offerId": "prueba-1-mes"} if trial else {"basePlanId": plan}
     item = {
         "productId": product,
         "expiryTime": expiry,
+        "offerDetails": offer,
         "autoRenewingPlan": {"autoRenewEnabled": state == "SUBSCRIPTION_STATE_ACTIVE"},
         "offerPhase": {"freeTrial": {}} if trial else {"basePrice": {}},
         "latestSuccessfulOrderId": "GPA.1234-5678",
@@ -56,6 +60,26 @@ class VerifyTests(TestCase):
         ack.assert_not_called()
         sub = Subscription.objects.get()
         self.assertEqual((sub.install_id, sub.latest_order_id, sub.application), ("inst-1", "GPA.1234-5678", self.app))
+
+    @mock.patch.object(google_play, "acknowledge")
+    @mock.patch.object(google_play, "get_subscription")
+    def test_all_base_plans_are_accepted(self, get_sub, ack):
+        cases = [  # (plan base, días hasta el vencimiento que da Google, ¿prueba gratis?)
+            ("mensual", 30, True),
+            ("trimestral", 91, False),
+            ("anual", 365, False),
+        ]
+        for plan, days, trial in cases:
+            with self.subTest(plan=plan):
+                get_sub.return_value = google_response(plan=plan, days=days, trial=trial)
+                body = self.post(token=f"token-{plan}").json()
+                self.assertTrue(body["active"])
+                self.assertEqual(body["in_trial"], trial)
+                expires = timezone.datetime.fromisoformat(body["expires_at"].replace("Z", "+00:00"))
+                self.assertAlmostEqual((expires - timezone.now()).days, days, delta=1)
+                sub = Subscription.objects.get(purchase_token=f"token-{plan}")
+                self.assertEqual(sub.base_plan_id, plan)
+                self.assertEqual(sub.offer_id, "prueba-1-mes" if trial else "")
 
     @mock.patch.object(google_play, "acknowledge")
     @mock.patch.object(google_play, "get_subscription")

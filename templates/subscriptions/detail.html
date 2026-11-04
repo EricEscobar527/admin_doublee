@@ -12,6 +12,8 @@
       <div class="card-body">
         <dl class="info-grid">
           <dt>Producto</dt><dd class="mono">{{ subscription.product_id }}</dd>
+          <dt>Plan base</dt><dd class="mono">{{ subscription.base_plan_id|default:"—" }}</dd>
+          <dt>Oferta</dt><dd class="mono">{{ subscription.offer_id|default:"—" }}</dd>
           <dt>Paquete</dt><dd class="mono text-break">{{ subscription.package_name }}</dd>
           <dt>Estado en Google</dt><dd class="mono small text-break">{{ subscription.state }}</dd>
           <dt>Con acceso</dt><dd>{% if subscription.active %}Sí{% else %}No{% endif %}</dd>

@@ -21,6 +21,9 @@ class Subscription(models.Model):
     purchase_token = models.TextField("token de compra")
     package_name = models.CharField("paquete", max_length=150)
     product_id = models.CharField("producto", max_length=100)
+    # lineItems[].offerDetails: plan base (mensual, trimestral, anual) y oferta (p. ej. prueba-1-mes)
+    base_plan_id = models.CharField("plan base", max_length=100, blank=True)
+    offer_id = models.CharField("oferta", max_length=100, blank=True)
     install_id = models.CharField("install_id", max_length=64, blank=True)
 
     state = models.CharField("estado", max_length=50)
