@@ -13,4 +13,7 @@ if (git status --porcelain) { Write-Warning "Hay cambios sin commit; no se van a
 git fetch origin main --quiet
 if (git log origin/main..HEAD --oneline) { Write-Warning "Hay commits sin push; haz 'git push' para desplegarlos." }
 
-ssh "$User@$Server" "cd $Path && git pull --ff-only && docker compose -f docker-compose.prod.yml up -d --build --remove-orphans && docker compose -f docker-compose.prod.yml ps"
+# git y docker escriben su progreso en stderr; en PowerShell 5 eso no debe cortar el script.
+$ErrorActionPreference = "Continue"
+ssh "$User@$Server" "cd $Path && git pull --ff-only && docker compose -f docker-compose.prod.yml up -d --build --remove-orphans && docker compose -f docker-compose.prod.yml ps" 2>&1 | ForEach-Object { "$_" }
+if ($LASTEXITCODE -ne 0) { throw "El deploy falló (código $LASTEXITCODE)." }
