@@ -25,7 +25,7 @@
 <body>
 <main>
   <h1>Política de privacidad de ViajeOK</h1>
-  <p class="updated">Última actualización: 3 de noviembre de 2026</p>
+  <p class="updated">Última actualización: 22 de noviembre de 2026</p>
 
   <h2>1. Quiénes somos</h2>
   <p>ViajeOK es una aplicación de DoubleE ("nosotros"). Para cualquier asunto de privacidad, escríbenos a
@@ -61,31 +61,51 @@
   </ul>
   <p>Esta información viaja cifrada (HTTPS) a nuestros servidores y la usamos únicamente para atender tu reporte y mejorar la app.</p>
 
-  <h2>6. Suscripciones (cuando estén disponibles)</h2>
+  <h2>6. Suscripciones</h2>
   <p>Los pagos se procesan a través de Google Play. No recibimos ni guardamos los datos de tu tarjeta.</p>
-  <p>Para verificar el pago, la app nos envía el token de compra que entrega Google Play y un identificador aleatorio de instalación que genera la app y que no te identifica personalmente. Con ellos consultamos a Google solo la información necesaria para confirmar si tu suscripción está activa: estado, si estás en periodo de prueba y fecha de vencimiento.</p>
+  <p>Para verificar el pago, la app nos envía el comprobante de compra (token) que entrega Google Play y un identificador aleatorio de instalación que genera la app y que no te identifica personalmente. Con ellos consultamos a Google solo la información necesaria para confirmar si tu suscripción está activa: estado, si estás en periodo de prueba y fecha de vencimiento.</p>
 
   <h2>7. Servicios de terceros</h2>
   <ul>
     <li><strong>Google Play:</strong> distribución de la app y pagos.</li>
     <li><strong>Google ML Kit:</strong> el reconocimiento de texto se ejecuta completamente dentro de tu teléfono; las imágenes y el texto reconocido no se envían a Google. El componente puede comunicarse con los servidores de Google para recibir actualizaciones y correcciones, y envía a Google métricas sobre el rendimiento y el uso del componente, que Google usa para medir su funcionamiento, corregir errores, mejorarlo y detectar usos indebidos, de acuerdo con sus <a href="https://developers.google.com/ml-kit/terms" rel="noopener">términos y política de privacidad</a>.</li>
+    <li><strong>Meta (Facebook):</strong> medición de nuestros anuncios y estadísticas de uso. Ver la sección 8.</li>
   </ul>
 
-  <h2>8. Con quién compartimos tus datos</h2>
-  <p>No vendemos ni rentamos tus datos. No los compartimos con terceros, salvo cuando la ley nos obligue.</p>
+  <h2>8. Medición de anuncios (SDK de Meta)</h2>
+  <p>La app incluye el SDK de Meta (Facebook), solo su módulo de eventos de app. Lo usamos para medir nuestros anuncios en Facebook e Instagram (saber qué instalaciones vienen de un anuncio) y para obtener estadísticas de uso de la app.</p>
+  <h3>Datos que la app comparte con Meta</h3>
+  <ul>
+    <li>El ID de publicidad de tu teléfono (el identificador de publicidad de Google).</li>
+    <li>Eventos de la app: que se instaló y cada vez que la abres (sesiones).</li>
+    <li>Datos técnicos del dispositivo: modelo, versión de Android, idioma, zona horaria, operador y tamaño de pantalla.</li>
+    <li>El identificador de atribución de la app de Facebook, si la tienes instalada en tu teléfono.</li>
+  </ul>
+  <h3>Lo que no se comparte con Meta</h3>
+  <ul>
+    <li>Nada de tus viajes: ni precios, distancias u ofertas, ni nada de lo que la app lee de la pantalla de DiDi, Uber o Rappi.</li>
+    <li>Nada de lo que envías en el formulario de Soporte.</li>
+    <li>Tus compras ni tu suscripción: el registro automático de compras del SDK está desactivado.</li>
+  </ul>
+  <p>Meta trata estos datos de acuerdo con su propia <a href="https://www.facebook.com/privacy/policy" rel="noopener">política de privacidad</a>.</p>
+  <h3>Cómo limitarlo</h3>
+  <p>Puedes borrar o restablecer el ID de publicidad de tu teléfono en Ajustes de Android &gt; Privacidad &gt; Anuncios. Si lo borras, las apps, incluida ViajeOK, ya no pueden usarlo para medir anuncios.</p>
 
-  <h2>9. Cuánto tiempo los conservamos</h2>
+  <h2>9. Con quién compartimos tus datos</h2>
+  <p>No vendemos ni rentamos tus datos. Solo los compartimos con los servicios de terceros descritos en las secciones 7 y 8, en la medida que ahí se indica, o cuando la ley nos obligue.</p>
+
+  <h2>10. Cuánto tiempo los conservamos</h2>
   <p>Conservamos los reportes de soporte hasta 12 meses después de resolverlos, y después los eliminamos.</p>
 
-  <h2>10. Tus derechos</h2>
+  <h2>11. Tus derechos</h2>
   <p>Puedes solicitar el acceso, rectificación, cancelación u oposición al tratamiento de tus datos (derechos ARCO), o pedir que borremos tus reportes de soporte, escribiendo a
     {% if contact_email %}<a href="mailto:{{ contact_email }}">{{ contact_email }}</a>{% else %}<span class="pending">[PENDIENTE: correo de contacto]</span>{% endif %}.
     Responderemos en un plazo máximo de 20 días hábiles.</p>
 
-  <h2>11. Menores de edad</h2>
+  <h2>12. Menores de edad</h2>
   <p>ViajeOK está dirigida a conductores mayores de 18 años. No recopilamos a sabiendas datos de menores.</p>
 
-  <h2>12. Cambios a esta política</h2>
+  <h2>13. Cambios a esta política</h2>
   <p>Si cambiamos esta política, publicaremos la nueva versión en esta misma página con su fecha de actualización.</p>
 </main>
 </body>
